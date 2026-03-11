@@ -1,0 +1,28 @@
+﻿@page "/headhunter-monitor"
+@attribute [StreamRendering]
+<PageTitle>Job tags monitor</PageTitle>
+
+<h3>HeadHunter job tags monitor</h3>
+
+@{
+    if (_jobTags.Count == 0)
+    {
+        <p><em>Loading...</em></p>
+        ;
+    }
+    else
+    {
+        <ul>
+            @foreach (var tag in _jobTags)
+            {
+                <li>@tag</li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    private List<string> _jobTags = new();
+
+
+}
