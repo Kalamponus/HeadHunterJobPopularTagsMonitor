@@ -3,11 +3,11 @@ using System.Text.Json;
 
 namespace HeadHunterJobPopularTagsMonitor.Services
 {
-	public class HeadHunterHttpService(HttpClient httpClient)
-	{
+	public class HeadHunterHttpService(HttpClient httpClient) : IHeadHunterHttpService
+    {
 		private readonly HttpClient _httpClient = httpClient;
 
-		public async Task<VacanciesSearchResult> GetVacanciesIdsAsync(string jobName, int per_page, int currentPage, CancellationToken token)
+		public async Task<VacanciesSearchResult> GetVacanciesIdsAsync(string jobName, int per_page, int currentPage, CancellationToken token = default)
 		{
 			HttpResponseMessage response = await _httpClient.GetAsync($"vacancies?text={jobName}&per_page={per_page}&page={currentPage}", token);
 
@@ -33,7 +33,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
             return searchResult;
 		}
 
-		public async Task<string[]> GetVacancyKeySkillsNamesAsync(string vacancyId, CancellationToken token)
+		public async Task<string[]> GetVacancyKeySkillsNamesAsync(string vacancyId, CancellationToken token = default)
 		{
 			HttpResponseMessage response = await _httpClient.GetAsync($"vacancies/{vacancyId}", token);
 

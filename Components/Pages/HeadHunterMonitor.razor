@@ -1,28 +1,66 @@
 ﻿@page "/headhunter-monitor"
 @attribute [StreamRendering]
+@using HeadHunterJobPopularTagsMonitor.Services
+@implements IDisposable;
+
 <PageTitle>Job tags monitor</PageTitle>
 
 <h3>HeadHunter job tags monitor</h3>
+<label for="_jobName">Job name:</label>
+<InputText @bind-Value="_jobName" placeholder="Job name"/>
+
+<label></label>
 
 @{
-    if (_jobTags.Count == 0)
-    {
-        <p><em>Loading...</em></p>
-        ;
-    }
-    else
-    {
-        <ul>
-            @foreach (var tag in _jobTags)
-            {
-                <li>@tag</li>
-            }
-        </ul>
-    }
+	if (_jobTags.Count == 0)
+	{
+		<p><em>Loading...</em></p>
+
+	}
+	else
+	{
+		<ul>
+			@foreach (var tag in _jobTags)
+			{
+				<li>@tag</li>
+			}
+		</ul>
+	}
 }
 
-@code {
-    private List<string> _jobTags = new();
+@code
+{
+	private readonly IJobKeySkillsRequestService _jobKeySkillsRequestService;
+	private CancellationTokenSource _cts;
+	private bool _isCtsDisposed = false;
+	private string _jobName;
 
+	public HeadHunterMonitor(IJobKeySkillsRequestService jobKeySkillsRequestService)
+	{
+		_jobKeySkillsRequestService = jobKeySkillsRequestService;
+	}
+	private void GetPopularJobTags(string jobName, int vacanciesCount = 100)
+	{
+		_cts = new();
+		_isCtsDisposed = false;
 
+		_jobKeySkillsRequestService.GetKeySkillsForJobAsync(jobName, vacanciesCount, _cts.Token);
+	}
+
+	private Dictionary<string, int> _jobTags = new();
+
+	private void DisposeCancellationTokenSource()
+	{
+		if (!_isCtsDisposed)
+		{
+			_cts.Cancel();
+			_cts.Dispose();
+			_isCtsDisposed = true;
+		}
+	}
+
+	public void Dispose()
+	{
+		DisposeCancellationTokenSource();
+	}
 }

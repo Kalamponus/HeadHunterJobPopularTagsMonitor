@@ -14,6 +14,10 @@ builder.Services
     .SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
 builder.Services
+    .AddSingleton<IHeadHunterHttpService, HeadHunterHttpService>()
+    .AddSingleton<IJobKeySkillsRequestService, JobKeySkillsRequestService>();
+
+builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
 

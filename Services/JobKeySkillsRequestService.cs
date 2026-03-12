@@ -2,8 +2,8 @@
 
 namespace HeadHunterJobPopularTagsMonitor.Services
 {
-	public class JobKeySkillsRequestService(HeadHunterHttpService headHunterHttpService) : IDisposable
-	{
+	public class JobKeySkillsRequestService(HeadHunterHttpService headHunterHttpService) : IJobKeySkillsRequestService, IDisposable
+    {
 		// Right now HH cant return more than 100 vacancies per page and is limited by 2000 vacancies total
 		private const int VacanciesPerPage = 100;
 		private const int MaxParallelRequests = 10;
@@ -20,7 +20,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 		/// If it is greater than the actual result (and max vacancies given by API response).</param>
 		/// <returns>Found key skills from vacancies, sorted by their popularity and how many times they were encountered. There can be less vacancies to take key skills from in case of 'vacanciesToProcessCount'
 		/// parameter being greater than the actual result.</returns>
-		public async Task<Dictionary<string, int>> GetKeySkillsForJobAsync(string jobName, int vacanciesToProcessCount, CancellationToken token)
+		public async Task<Dictionary<string, int>> GetKeySkillsForJobAsync(string jobName, int vacanciesToProcessCount, CancellationToken token = default)
 		{
 			if (string.IsNullOrWhiteSpace(jobName))
 				return [];
@@ -49,7 +49,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				IEnumerable<Task<VacanciesSearchResult>> pageTasks = Enumerable.Range(1, actualRemainingPagesCount)
 					.Select(async pageNumber =>
 					{
-						await _semaphore.WaitAsync();
+						await _semaphore.WaitAsync(token);
 
 						try
 						{
@@ -76,7 +76,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 
 			IEnumerable<Task<string[]>> skillTasks = vacanciesIds.Select(async vacancyId =>
 			{
-				await _semaphore.WaitAsync();
+				await _semaphore.WaitAsync(token);
 
 				try
 				{
