@@ -1,5 +1,4 @@
 ﻿using HeadHunterJobPopularTagsMonitor.DTOs;
-using HeadHunterJobPopularTagsMonitor.HttpClients;
 
 namespace HeadHunterJobPopularTagsMonitor.Services
 {
@@ -56,6 +55,10 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 						{
 							return await _headHunterHttpService.GetVacanciesIdsAsync(jobName, VacanciesPerPage, pageNumber, token);
 						}
+						catch (HttpRequestException ex)
+						{
+							return new VacanciesSearchResult();
+                        }
 						finally
 						{
 							_semaphore.Release();
@@ -79,7 +82,11 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				{
 					return await _headHunterHttpService.GetVacancyKeySkillsNamesAsync(vacancyId, token);
 				}
-				finally
+                catch (HttpRequestException ex)
+                {
+					return [];
+                }
+                finally
 				{
 					_semaphore.Release();
 				}

@@ -1,4 +1,4 @@
-﻿using HeadHunterJobPopularTagsMonitor.HttpClients;
+﻿using HeadHunterJobPopularTagsMonitor.Services;
 
 namespace HeadHunterJobPopularTagsMonitor.Extensions
 {

@@ -1,7 +1,7 @@
 ﻿using HeadHunterJobPopularTagsMonitor.DTOs;
 using System.Text.Json;
 
-namespace HeadHunterJobPopularTagsMonitor.HttpClients
+namespace HeadHunterJobPopularTagsMonitor.Services
 {
 	public class HeadHunterHttpService(HttpClient httpClient)
 	{

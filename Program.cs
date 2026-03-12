@@ -1,6 +1,6 @@
-using HeadHunterJobPopularTagsMonitor.Components;
+﻿using HeadHunterJobPopularTagsMonitor.Components;
 using HeadHunterJobPopularTagsMonitor.Constants;
-using HeadHunterJobPopularTagsMonitor.HttpClients;
+using HeadHunterJobPopularTagsMonitor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
