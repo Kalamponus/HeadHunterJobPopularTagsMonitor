@@ -30,9 +30,16 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 
 			VacanciesSearchResult searchResult;
 
-			searchResult = await _headHunterHttpService.GetVacanciesIdsAsync(jobName, VacanciesPerPage, 0, token);
+			try
+			{
+				searchResult = await _headHunterHttpService.GetVacanciesIdsAsync(jobName, VacanciesPerPage, 0, token);
+			}
+            catch (HttpRequestException ex)
+            {
+                return [];
+            }
 
-			if (searchResult.AvailablePagesCount == 0)
+            if (searchResult.AvailablePagesCount == 0)
 				return [];
 
 			int actualRemainingPagesCount = vacanciesToProcessCount > VacanciesPerPage
