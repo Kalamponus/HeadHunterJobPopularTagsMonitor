@@ -63,7 +63,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 			{
 				response = await _httpClient.GetAsync(request, token);
 
-				if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
 				{
 					if (requestAttempts > RequestMaxRetries)
 						break;
