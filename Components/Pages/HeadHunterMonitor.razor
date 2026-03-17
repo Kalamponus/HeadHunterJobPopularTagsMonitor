@@ -1,5 +1,6 @@
 ﻿@page "/headhunter-monitor"
 @rendermode InteractiveServer
+@using HeadHunterJobPopularTagsMonitor.Constants
 @using HeadHunterJobPopularTagsMonitor.Services
 @implements IDisposable;
 
@@ -7,14 +8,22 @@
 
 <h3>HeadHunter job tags monitor</h3>
 <label for="jobName">Job name:</label>
-<input id="jobName" @bind="_jobName" placeholder="Job name" />
+<InputText id="jobName" @bind-value="_jobName" placeholder="Job name" disabled="@_isLoading"/>
 
 <label for="vacanciesCount">Number of vacancies in selection</label>
-<input id="vacanciesCount" @bind="_vacanciesCount" />
+<InputNumber id="vacanciesCount" @bind-value="_vacanciesCount" disabled="@_isLoading"/>
 
-<button @onclick="() => GetPopularJobTagsAsync(_jobName, _vacanciesCount)">Find popular tags for job</button>
+<button class="btn btn-primary" @onclick="() => GetPopularJobTagsAsync(_jobName, _vacanciesCount)">@_searchButtonText</button>
 
 @{
+	if (_isValidationFailed)
+	{
+		foreach (string error in _validationErrorMessages)
+		{
+			<p style="color: red">@error</p>
+		}
+	}
+
 	if (_isLoading)
 	{
 		<p><em>Loading...</em></p>
@@ -48,6 +57,9 @@
 
 @code
 {
+    private const string DefaultSearchButtonText = "Find popular tags for job";
+    private const string CancelingSearchButtonText = "Cancel search";
+
 	private readonly IJobKeySkillsRequestService _jobKeySkillsRequestService;
 	private CancellationTokenSource _cts;
 	private bool _isCtsDisposed = false;
@@ -58,15 +70,30 @@
 
 	private bool _isLoading = false;
 	private bool _isLoadComplete = false;
+	private bool _isValidationFailed = false;
+	private List<string> _validationErrorMessages = [];
+	private string _searchButtonText = DefaultSearchButtonText;
 
 	public HeadHunterMonitor(IJobKeySkillsRequestService jobKeySkillsRequestService)
 	{
 		_jobKeySkillsRequestService = jobKeySkillsRequestService;
 	}
 
-	private async Task GetPopularJobTagsAsync(string jobName, int vacanciesCount = 100)
+	private async Task GetPopularJobTagsAsync(string jobName, int vacanciesCount)
 	{
-		DisposeCancellationTokenSource();
+        if (_isLoading)
+        {
+            DisposeCancellationTokenSource();
+            _searchButtonText = DefaultSearchButtonText;
+            _isLoading = false;
+
+            return;
+        }
+
+		if (!ValidateInput(jobName, vacanciesCount))
+			return;
+
+		_searchButtonText = CancelingSearchButtonText;
 
 		_cts = new();
 		_isCtsDisposed = false;
@@ -78,6 +105,37 @@
 
 		_isLoading = false;
 		_isLoadComplete = true;
+		_searchButtonText = DefaultSearchButtonText;
+	}
+
+	private bool ValidateInput(string jobName, int vacanciesCount)
+	{
+        bool isValid = true;
+		_validationErrorMessages.Clear();
+
+		if (string.IsNullOrWhiteSpace(jobName))
+		{
+			isValid = false;
+			_validationErrorMessages.Add("Job name cannot be empty.");
+		}
+		if (jobName.Length > 200)
+		{
+			isValid = false;
+			_validationErrorMessages.Add("Job name cannot be longer than 200 characters.");
+		}
+		if (vacanciesCount <= 0)
+		{
+			isValid = false;
+			_validationErrorMessages.Add("Number of vacancies must be greater than zero.");
+		}
+		if (vacanciesCount > HeadHunterApiConstants.MaxVacanciesInRequest)
+		{
+			isValid = false;
+			_validationErrorMessages.Add($"Number of vacancies cannot be greater than {HeadHunterApiConstants.MaxVacanciesInRequest}.");
+		}
+
+		_isValidationFailed = !isValid;
+		return isValid;
 	}
 
 	public void Dispose()

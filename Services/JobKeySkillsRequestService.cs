@@ -36,6 +36,8 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 			}
             catch (HttpRequestException ex)
             {
+                // TODO: log exception
+
                 return [];
             }
 
@@ -99,8 +101,8 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				}
 			});
 
-			// An array of collections of skills that are mentioned inside each vacancy
-			string[][] keySkillsInVacancies = await Task.WhenAll(skillTasks);
+            // An array of skills that are mentioned inside vacancy (one array per vacancy)
+            string[][] keySkillsInVacancies = await Task.WhenAll(skillTasks);
 
 			Dictionary<string, int> keySkills = [];
 
