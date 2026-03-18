@@ -7,13 +7,33 @@
 <PageTitle>Job tags monitor</PageTitle>
 
 <h3>HeadHunter job tags monitor</h3>
-<label for="jobName">Job name:</label>
-<InputText id="jobName" @bind-value="_jobName" placeholder="Job name" disabled="@_isLoading"/>
+<EditForm EditContext="_editContext">
+	<div>
+		<label>
+			Job name:
+			<InputText id="jobName" @bind-value="_jobName" placeholder="Job name" disabled="@_isLoading"/>
+		</label>
+	</div>
 
-<label for="vacanciesCount">Number of vacancies in selection</label>
-<InputNumber id="vacanciesCount" @bind-value="_vacanciesCount" disabled="@_isLoading"/>
+	<div>
+		<label>
+			Number of vacancies in selection
+			<InputNumber id="vacanciesCount" @bind-value="_vacanciesCount" disabled="@_isLoading" @onchange="OnVacancyCountFieldChange" />
+		</label>
+	</div>
+	<div>
+		<p style="color: gray">Note: The more vacancies you want to analyze, the longer the search will take. Maximum number of vacancies is @HeadHunterApiConstants.MaxVacanciesInRequest</p>
+        <p style="color: gray">Note: If you want to stop the search, just click the button again :)</p>
+	</div>
+	<div>
+        <ValidationMessage For="@(() => _jobName)" />
+        <ValidationMessage For="@(() => _vacanciesCount)" />
+	</div>
+	<div>
+		<button class="btn btn-primary" @onclick="() => GetPopularJobTagsAsync(_jobName, _vacanciesCount)">@_searchButtonText</button>
+	</div>
+</EditForm>
 
-<button class="btn btn-primary" @onclick="() => GetPopularJobTagsAsync(_jobName, _vacanciesCount)">@_searchButtonText</button>
 
 @{
 	if (_isValidationFailed)
@@ -57,12 +77,14 @@
 
 @code
 {
-    private const string DefaultSearchButtonText = "Find popular tags for job";
-    private const string CancelingSearchButtonText = "Cancel search";
+	private const string DefaultSearchButtonText = "Find popular tags for job";
+	private const string CancelingSearchButtonText = "Cancel search";
 
 	private readonly IJobKeySkillsRequestService _jobKeySkillsRequestService;
 	private CancellationTokenSource _cts;
 	private bool _isCtsDisposed = false;
+
+	private EditContext? _editContext;
 
 	private string _jobName = "Программист C#";
 	private int _vacanciesCount = 100;
@@ -81,14 +103,14 @@
 
 	private async Task GetPopularJobTagsAsync(string jobName, int vacanciesCount)
 	{
-        if (_isLoading)
-        {
-            DisposeCancellationTokenSource();
-            _searchButtonText = DefaultSearchButtonText;
-            _isLoading = false;
+		if (_isLoading)
+		{
+			DisposeCancellationTokenSource();
+			_searchButtonText = DefaultSearchButtonText;
+			_isLoading = false;
 
-            return;
-        }
+			return;
+		}
 
 		if (!ValidateInput(jobName, vacanciesCount))
 			return;
@@ -110,7 +132,7 @@
 
 	private bool ValidateInput(string jobName, int vacanciesCount)
 	{
-        bool isValid = true;
+		bool isValid = true;
 		_validationErrorMessages.Clear();
 
 		if (string.IsNullOrWhiteSpace(jobName))
@@ -136,6 +158,11 @@
 
 		_isValidationFailed = !isValid;
 		return isValid;
+	}
+
+	private void OnVacancyCountFieldChange(ChangeEventArgs args)
+	{
+        //if (args.Value
 	}
 
 	public void Dispose()
