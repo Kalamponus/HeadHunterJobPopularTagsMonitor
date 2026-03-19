@@ -1,24 +1,27 @@
 ﻿@page "/headhunter-monitor"
 @rendermode InteractiveServer
 @using HeadHunterJobPopularTagsMonitor.Constants
+@using HeadHunterJobPopularTagsMonitor.Models
 @using HeadHunterJobPopularTagsMonitor.Services
+@using System.ComponentModel.DataAnnotations
 @implements IDisposable;
 
 <PageTitle>Job tags monitor</PageTitle>
 
 <h3>HeadHunter job tags monitor</h3>
-<EditForm EditContext="_editContext">
+<EditForm EditContext="_editContext" OnValidSubmit="() => GetPopularJobTagsAsync(model.JobName, model.VacanciesCount)">
+	<DataAnnotationsValidator />
 	<div>
 		<label>
-			Job name:
-			<InputText id="jobName" @bind-value="_jobName" placeholder="Job name" disabled="@_isLoading"/>
+			Job name (@JobSearch.JobNameMaxLength):
+			<InputText id="jobName" @bind-value="model.JobName" placeholder="Job name" disabled="@_isLoading" maxlength="@JobSearch.JobNameMaxLength" />
 		</label>
 	</div>
 
 	<div>
 		<label>
-			Number of vacancies in selection
-			<InputNumber id="vacanciesCount" @bind-value="_vacanciesCount" disabled="@_isLoading" @onchange="OnVacancyCountFieldChange" />
+            Number of vacancies in selection (max is @HeadHunterApiConstants.MaxVacanciesInRequest):
+			<InputNumber id="vacanciesCount" @bind-value="model.VacanciesCount" disabled="@_isLoading" @onchange="OnVacancyCountFieldChange" />
 		</label>
 	</div>
 	<div>
@@ -26,11 +29,11 @@
         <p style="color: gray">Note: If you want to stop the search, just click the button again :)</p>
 	</div>
 	<div>
-        <ValidationMessage For="@(() => _jobName)" />
-        <ValidationMessage For="@(() => _vacanciesCount)" />
+		<ValidationMessage For="@(() => model.JobName)" />
+		<ValidationMessage For="@(() => model.VacanciesCount)" />
 	</div>
 	<div>
-		<button class="btn btn-primary" @onclick="() => GetPopularJobTagsAsync(_jobName, _vacanciesCount)">@_searchButtonText</button>
+		<button class="btn btn-primary" type="submit">@_searchButtonText</button>
 	</div>
 </EditForm>
 
@@ -81,13 +84,12 @@
 	private const string CancelingSearchButtonText = "Cancel search";
 
 	private readonly IJobKeySkillsRequestService _jobKeySkillsRequestService;
+    private JobSearch model = new();
 	private CancellationTokenSource _cts;
 	private bool _isCtsDisposed = false;
 
 	private EditContext? _editContext;
 
-	private string _jobName = "Программист C#";
-	private int _vacanciesCount = 100;
 	private Dictionary<string, int> _jobTags = new();
 
 	private bool _isLoading = false;
@@ -112,9 +114,6 @@
 			return;
 		}
 
-		if (!ValidateInput(jobName, vacanciesCount))
-			return;
-
 		_searchButtonText = CancelingSearchButtonText;
 
 		_cts = new();
@@ -128,36 +127,6 @@
 		_isLoading = false;
 		_isLoadComplete = true;
 		_searchButtonText = DefaultSearchButtonText;
-	}
-
-	private bool ValidateInput(string jobName, int vacanciesCount)
-	{
-		bool isValid = true;
-		_validationErrorMessages.Clear();
-
-		if (string.IsNullOrWhiteSpace(jobName))
-		{
-			isValid = false;
-			_validationErrorMessages.Add("Job name cannot be empty.");
-		}
-		if (jobName.Length > 200)
-		{
-			isValid = false;
-			_validationErrorMessages.Add("Job name cannot be longer than 200 characters.");
-		}
-		if (vacanciesCount <= 0)
-		{
-			isValid = false;
-			_validationErrorMessages.Add("Number of vacancies must be greater than zero.");
-		}
-		if (vacanciesCount > HeadHunterApiConstants.MaxVacanciesInRequest)
-		{
-			isValid = false;
-			_validationErrorMessages.Add($"Number of vacancies cannot be greater than {HeadHunterApiConstants.MaxVacanciesInRequest}.");
-		}
-
-		_isValidationFailed = !isValid;
-		return isValid;
 	}
 
 	private void OnVacancyCountFieldChange(ChangeEventArgs args)
