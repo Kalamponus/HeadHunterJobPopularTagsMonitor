@@ -1,4 +1,5 @@
 ﻿using HeadHunterJobPopularTagsMonitor.DTOs;
+using System.Net;
 using System.Text.Json;
 
 namespace HeadHunterJobPopularTagsMonitor.Services
@@ -7,7 +8,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 	{
 		private const int RequestMaxRetries = 5;
 		private const int RetryDelayModifier = 2;
-		private const int BaseRetryDelayInMilliseconds = 100;
+		private const int BaseRetryDelayInMilliseconds = 1000;
 
 		private readonly HttpClient _httpClient = httpClient;
 
@@ -63,8 +64,10 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 			{
 				response = await _httpClient.GetAsync(request, token);
 
-                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                if (response.StatusCode == HttpStatusCode.TooManyRequests || response.StatusCode == HttpStatusCode.Forbidden)
 				{
+					
+
 					if (requestAttempts > RequestMaxRetries)
 						break;
 

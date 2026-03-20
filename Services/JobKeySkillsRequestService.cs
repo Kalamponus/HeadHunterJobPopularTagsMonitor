@@ -6,7 +6,8 @@ namespace HeadHunterJobPopularTagsMonitor.Services
     {
 		// Right now HH cant return more than 100 vacancies per page and is limited by 2000 vacancies total
 		private const int VacanciesPerPage = 100;
-		private const int MaxParallelRequests = 10;
+		private const int MaxParallelRequests = 5;
+		private const int RequestDelayInMilliseconds = 1000;
 
 		private readonly HeadHunterHttpService _headHunterHttpService = headHunterHttpService;
 
@@ -58,11 +59,14 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				IEnumerable<Task<VacanciesSearchResult>> pageTasks = Enumerable.Range(1, actualRemainingPagesCount)
 					.Select(async pageNumber =>
 					{
-						await _semaphore.WaitAsync(token);
+						//bool smaphoreAcquired = false;
 
-						try
+                        try
 						{
-							return await _headHunterHttpService.GetVacanciesIdsAsync(jobName, VacanciesPerPage, pageNumber, token);
+							await Task.Delay(RequestDelayInMilliseconds);
+                            await _semaphore.WaitAsync(token);
+							//smaphoreAcquired = true;
+                            return await _headHunterHttpService.GetVacanciesIdsAsync(jobName, VacanciesPerPage, pageNumber, token);
 						}
 						catch (HttpRequestException ex)
 						{
@@ -70,7 +74,8 @@ namespace HeadHunterJobPopularTagsMonitor.Services
                         }
 						finally
 						{
-							_semaphore.Release();
+							//if (smaphoreAcquired)
+								_semaphore.Release();
 						}
 					});
 
@@ -85,11 +90,11 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 
 			IEnumerable<Task<string[]>> skillTasks = vacanciesIds.Select(async vacancyId =>
 			{
-				await _semaphore.WaitAsync(token);
-
 				try
 				{
-					return await _headHunterHttpService.GetVacancyKeySkillsNamesAsync(vacancyId, token);
+                    await Task.Delay(RequestDelayInMilliseconds);
+                    await _semaphore.WaitAsync(token);
+                    return await _headHunterHttpService.GetVacancyKeySkillsNamesAsync(vacancyId, token);
 				}
                 catch (HttpRequestException ex)
                 {
