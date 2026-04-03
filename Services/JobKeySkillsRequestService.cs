@@ -59,13 +59,15 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				IEnumerable<Task<VacanciesSearchResult>> pageTasks = Enumerable.Range(1, actualRemainingPagesCount)
 					.Select(async pageNumber =>
 					{
-						//bool smaphoreAcquired = false;
+						bool smaphoreAcquired = false;
 
                         try
 						{
 							await Task.Delay(RequestDelayInMilliseconds);
                             await _semaphore.WaitAsync(token);
-							//smaphoreAcquired = true;
+
+							smaphoreAcquired = true;
+
                             return await _headHunterHttpService.GetVacanciesIdsAsync(jobName, VacanciesPerPage, pageNumber, token);
 						}
 						catch (HttpRequestException ex)
@@ -74,7 +76,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
                         }
 						finally
 						{
-							//if (smaphoreAcquired)
+							if (smaphoreAcquired)
 								_semaphore.Release();
 						}
 					});
@@ -90,10 +92,15 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 
 			IEnumerable<Task<string[]>> skillTasks = vacanciesIds.Select(async vacancyId =>
 			{
-				try
+                bool smaphoreAcquired = false;
+
+                try
 				{
                     await Task.Delay(RequestDelayInMilliseconds);
                     await _semaphore.WaitAsync(token);
+
+                    smaphoreAcquired = true;
+
                     return await _headHunterHttpService.GetVacancyKeySkillsNamesAsync(vacancyId, token);
 				}
                 catch (HttpRequestException ex)
@@ -102,7 +109,8 @@ namespace HeadHunterJobPopularTagsMonitor.Services
                 }
                 finally
 				{
-					_semaphore.Release();
+                    if (smaphoreAcquired)
+                        _semaphore.Release();
 				}
 			});
 
