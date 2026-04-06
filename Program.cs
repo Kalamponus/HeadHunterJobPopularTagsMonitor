@@ -1,8 +1,12 @@
 ﻿using HeadHunterJobPopularTagsMonitor.Components;
 using HeadHunterJobPopularTagsMonitor.Constants;
 using HeadHunterJobPopularTagsMonitor.Services;
+using NLog.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 // Add services to the container.
 builder.Services
