@@ -66,8 +66,6 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 
                 if (response.StatusCode == HttpStatusCode.TooManyRequests || response.StatusCode == HttpStatusCode.Forbidden)
 				{
-					
-
 					if (requestAttempts > RequestMaxRetries)
 						break;
 
