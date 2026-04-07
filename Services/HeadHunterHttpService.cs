@@ -4,16 +4,19 @@ using System.Text.Json;
 
 namespace HeadHunterJobPopularTagsMonitor.Services
 {
-	public class HeadHunterHttpService(HttpClient httpClient) : IHeadHunterHttpService
+	public class HeadHunterHttpService(HttpClient httpClient, ILogger<HeadHunterHttpService> logger) : IHeadHunterHttpService
 	{
 		private const int RequestMaxRetries = 5;
 		private const int RetryDelayModifier = 2;
 		private const int BaseRetryDelayInMilliseconds = 1000;
 
 		private readonly HttpClient _httpClient = httpClient;
+		private readonly ILogger<HeadHunterHttpService> _logger = logger;
 
-		public async Task<VacanciesSearchResult> GetVacanciesIdsAsync(string jobName, int perPage, int currentPage, CancellationToken token = default)
+        public async Task<VacanciesSearchResult> GetVacanciesIdsAsync(string jobName, int perPage, int currentPage, CancellationToken token = default)
 		{
+			_logger.Log(LogLevel.Information, "Sending request to get vacancies ids for job '{JobName}' with page {Page} and {PerPage} vacancies per page.", jobName, currentPage, perPage);
+
             HttpResponseMessage response = await SendGetRequestWithRetriesAsync($"vacancies?text={Uri.EscapeDataString(jobName)}&per_page={perPage}&page={currentPage}", token);
 
 			VacanciesSearchResult searchResult = new();
@@ -83,7 +86,7 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				}
 				else
 				{
-					break;
+                    break;
 				}
 			}
 
