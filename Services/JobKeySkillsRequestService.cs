@@ -89,7 +89,9 @@
 						if (result.VacanciesIds.Length > 0)
 							vacanciesIds.AddRange(GetVacanciesIdsFromPage(result.VacanciesIds, ref remainingVacanciesToProcessCount));
 					}
-				}
+
+					_logger.Log(LogLevel.Information, "Got vacancies ids for {VacanciesCount} vacancies", vacanciesIds.Count);
+            }
 
 				IEnumerable<Task<string[]>> skillTasks = vacanciesIds.Select(async vacancyId =>
 				{

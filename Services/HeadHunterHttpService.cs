@@ -54,7 +54,9 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				.Select(name => name!)
 				.ToArray();
 
-			return keySkillsNames;
+			_logger.Log(LogLevel.Information, "Received {KeySkillsCount} key skills for vacancy with id '{VacancyId}'.", keySkillsNames.Length, vacancyId);
+
+            return keySkillsNames;
 		}
 
 		private async Task<HttpResponseMessage> SendGetRequestWithRetriesAsync(string request, CancellationToken token = default)
@@ -90,7 +92,10 @@ namespace HeadHunterJobPopularTagsMonitor.Services
 				}
 			}
 
-			response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+                _logger.Log(LogLevel.Warning, "Request to '{Request}' failed with status code {StatusCode} on {RequestAttempt} request attempt.", request, response.StatusCode, requestAttempts);
+
+            response.EnsureSuccessStatusCode();
 			return response;
 		}
 	}
